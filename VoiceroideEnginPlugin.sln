@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.6.33829.357
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VoiceroidTalkEngine", "VoiceroidTalkEngine\VoiceroidTalkEngine.csproj", "{0C6A4E64-8749-4B26-B6DB-C644F5A13939}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VoiceroidLibrary", "VoiceroidLibrary\VoiceroidLibrary.csproj", "{D52D371B-8E19-45AB-A33D-505EEC9BE4C7}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{0C6A4E64-8749-4B26-B6DB-C644F5A13939}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0C6A4E64-8749-4B26-B6DB-C644F5A13939}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0C6A4E64-8749-4B26-B6DB-C644F5A13939}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0C6A4E64-8749-4B26-B6DB-C644F5A13939}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D52D371B-8E19-45AB-A33D-505EEC9BE4C7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D52D371B-8E19-45AB-A33D-505EEC9BE4C7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D52D371B-8E19-45AB-A33D-505EEC9BE4C7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D52D371B-8E19-45AB-A33D-505EEC9BE4C7}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {B6377857-FD56-488D-9247-89902AA548D9}
+	EndGlobalSection
+EndGlobal
