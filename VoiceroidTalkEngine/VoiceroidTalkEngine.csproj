@@ -11,6 +11,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\HakuVoiceNarratorLibrary\HakuVoiceNarratorLibrary.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
     <None Update="engine.config.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
