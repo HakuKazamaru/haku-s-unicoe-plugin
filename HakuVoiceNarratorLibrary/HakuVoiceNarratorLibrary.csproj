@@ -1,12 +1,15 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net5.0-windows</TargetFramework>
+    <TargetFramework>net6.0-windows</TargetFramework>
+    <Platforms>x86</Platforms>
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Codeer.Friendly.Windows.NativeStandardControls" Version="2.16.10" />
     <PackageReference Include="NAudio" Version="2.2.1" />
     <PackageReference Include="NLog.Web.AspNetCore" Version="5.3.4" />
+    <PackageReference Include="Ong.Friendly.FormsStandardControls" Version="2.21.2" />
   </ItemGroup>
 
   <ItemGroup>

@@ -1,4 +1,5 @@
 using HakuVoiceNarratorLibrary;
+using HakuVoiceNarratorLibrary.Models;
 
 namespace TestFoem
 {
@@ -20,6 +21,8 @@ namespace TestFoem
         public MainForm()
         {
             InitializeComponent();
+            this.tbSpeakerId.Text = "0";
+            this.tbText.Text = "読み上げる内容を入力してください。";
         }
 
         /// <summary>
@@ -70,14 +73,48 @@ namespace TestFoem
         {
             try
             {
-                (int returnVal, int sampleRate, double[] wave) = await Voiceroid.TakeVoiceroid(
-                    Path.GetDirectoryName(Program.config.ConfigPath),
-                    this.tbText.Text,
-                    this.trcbrVolume.Value / (float)10.0,
-                    this.trcbrSpeed.Value / (float)10.0,
-                    this.trcbrPitch.Value,
-                    this.trcbrIntonation.Value / (float)10.0,
-                    (int)(this.trcbrKuTen.Value / (float)10.0));
+                float tmpFloat = 0.0f;
+                uint tmpUint = 0;
+                VoiceParameter voiceParameter = new VoiceParameter();
+
+                // 音量
+                if (float.TryParse(this.tbVolume.Text, out tmpFloat))
+                    voiceParameter.Volume = tmpFloat;
+                else
+                    voiceParameter.Volume = 1.0f;
+
+                // 話速
+                if (float.TryParse(this.tbSpeed.Text, out tmpFloat))
+                    voiceParameter.Speed = tmpFloat;
+                else
+                    voiceParameter.Speed = 1.0f;
+
+                // 高さ
+                if (float.TryParse(this.tbPitch.Text, out tmpFloat))
+                    voiceParameter.Tone = tmpFloat;
+                else
+                    voiceParameter.Tone = 1.0f;
+
+                // 抑揚
+                if (float.TryParse(this.tbIntonation.Text, out tmpFloat))
+                    voiceParameter.Intonation = tmpFloat;
+                else
+                    voiceParameter.Intonation = 1.0f;
+
+                // テキスト
+                voiceParameter.Texts = new List<string>();
+                if (string.IsNullOrEmpty(this.tbText.Text))
+                    throw new Exception("読み上げるテキストを入力してください。");
+                voiceParameter.Texts.Add(this.tbText.Text);
+
+                if (!uint.TryParse(this.tbSpeakerId.Text, out tmpUint))
+                    throw new Exception("SpeakerIDは正の整数で入力してください。");
+
+                using (var obgVoiceroid = new Voiceroid((int)tmpUint))
+                {
+                    await obgVoiceroid.TakeVoiceroid(voiceParameter);
+
+                }
             }
             catch (Exception ex)
             {

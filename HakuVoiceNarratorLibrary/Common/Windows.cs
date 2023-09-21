@@ -7,7 +7,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace HakuVoiceNarratorLibrary
+namespace HakuVoiceNarratorLibrary.Common
 {
     /// <summary>
     /// ウィンドウメッセージ制御関連クラス
@@ -17,7 +17,7 @@ namespace HakuVoiceNarratorLibrary
         /// <summary>
         /// NLogロガー
         /// </summary>
-        private static NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
+        private static Logger logger = LogManager.GetCurrentClassLogger();
 
         #region ウィンドウコントロール情報
         /// <summary>
@@ -161,7 +161,7 @@ namespace HakuVoiceNarratorLibrary
             /// <summary>
             /// 送信データポインターのバイト数
             /// </summary>
-            public UInt32 cbData;
+            public uint cbData;
             /// <summary>
             /// 送信データのポインター
             /// </summary>
@@ -177,21 +177,7 @@ namespace HakuVoiceNarratorLibrary
         {
             logger.Trace("==============================  Start   ==============================");
 
-            /*
-            COPYDATASTRUCT cds = new COPYDATASTRUCT();
-            Byte[] data = Encoding.Unicode.GetBytes(str);
-
-            cds.dwData = IntPtr.Zero;
-            cds.lpData = Marshal.AllocHGlobal(data.Length); ;
-            cds.cbData = (uint)data.Length;
-            Marshal.Copy(data, 0, cds.lpData, data.Length);
-
-            IntPtr myWindowHandle = Process.GetCurrentProcess().MainWindowHandle;
-            SendMessage(targetWindowHandle, WM_COPYDATA, myWindowHandle, ref cds);
-
-            Marshal.FreeHGlobal(cds.lpData);
-            */
-
+            // テキスト送信
             SendMessage(targetWindowHandle, WM_SETTEXT, 0, str);
 
             // ログ出力

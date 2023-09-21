@@ -1,6 +1,5 @@
-﻿using HakuVoiceNarratorLibrary;
-using NAudio.Wave;
-using NLog;
+﻿using NAudio.Wave;
+
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
