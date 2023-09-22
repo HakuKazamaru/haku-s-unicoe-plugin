@@ -20,9 +20,16 @@ namespace TestFoem
         /// </summary>
         public MainForm()
         {
+            logger.Debug("==============================  Start   ==============================");
+
             InitializeComponent();
+
             this.tbSpeakerId.Text = "0";
             this.tbText.Text = "読み上げる内容を入力してください。";
+
+            logger.Info("フォームを初期化しました。");
+
+            logger.Debug("==============================   End    ==============================");
         }
 
         /// <summary>
@@ -35,31 +42,39 @@ namespace TestFoem
         private float ValidateTextBoxValue(TrackBar targetTrackBar, ref string originalValue, float magnification, float defaultValue)
         {
             float tmpVal = 0;
+            logger.Debug("==============================  Start   ==============================");
+
+            logger.Debug("・バリデーション情報");
+            logger.Debug("対象スライドバー：{0}", targetTrackBar.Name);
+            logger.Debug("チェック文字列　：{0}", originalValue);
+            logger.Debug("倍率設定　　　　：{0}", magnification);
+            logger.Debug("初期値　　　　　：{0}", defaultValue);
 
             if (float.TryParse(originalValue, out tmpVal))
             {
                 tmpVal *= magnification;
                 if (targetTrackBar.Maximum < tmpVal)
                 {
-                    originalValue = (targetTrackBar.Maximum / magnification).ToString("0.0");
+                    originalValue = (targetTrackBar.Maximum / magnification).ToString("0.00");
                     tmpVal = targetTrackBar.Maximum;
                 }
                 else if (targetTrackBar.Minimum > tmpVal)
                 {
-                    originalValue = (targetTrackBar.Minimum / magnification).ToString("0.0");
+                    originalValue = (targetTrackBar.Minimum / magnification).ToString("0.00");
                     tmpVal = targetTrackBar.Minimum;
                 }
                 else
                 {
-                    originalValue = (tmpVal / magnification).ToString("0.0");
+                    originalValue = (tmpVal / magnification).ToString("0.00");
                 }
             }
             else
             {
-                originalValue = defaultValue.ToString("0.0");
+                originalValue = defaultValue.ToString("0.00");
                 tmpVal = defaultValue * magnification;
             }
 
+            logger.Debug("==============================   End    ==============================");
             return tmpVal;
         }
 
@@ -71,6 +86,8 @@ namespace TestFoem
         /// <param name="e"></param>
         private async void btText2Speech_Click(object sender, EventArgs e)
         {
+            logger.Debug("==============================  Start   ==============================");
+
             try
             {
                 float tmpFloat = 0.0f;
@@ -112,15 +129,107 @@ namespace TestFoem
 
                 using (var obgVoiceroid = new Voiceroid((int)tmpUint))
                 {
-                    await obgVoiceroid.TakeVoiceroid(voiceParameter);
-
+                    int returnVal = await obgVoiceroid.TakeVoiceroid(voiceParameter);
+                    if (returnVal == 0)
+                    {
+                        logger.Info("VOICEROIDで音声を再生しました。");
+                    }
+                    else
+                    {
+                        string msgString = "VOICEROIDでの音声再生に失敗しました。";
+                        MessageBox.Show(msgString, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        logger.Error(msgString);
+                    }
                 }
             }
             catch (Exception ex)
             {
                 MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                logger.Error(ex, "btText2Speech_Clickでエラーが発生しました。メッセージ：{0}", ex.Message);
             }
 
+            logger.Debug("==============================   End    ==============================");
+        }
+
+        /// <summary>
+        /// 音声保存ボタンクリック
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private async void btText2File_Click(object sender, EventArgs e)
+        {
+            logger.Debug("==============================  Start   ==============================");
+
+            try
+            {
+                float tmpFloat = 0.0f;
+                uint tmpUint = 0;
+                string savePath = Path.Combine(Directory.GetCurrentDirectory(), "output.wav");
+                VoiceParameter voiceParameter = new VoiceParameter();
+
+                if (File.Exists(savePath))
+                {
+                    File.Delete(savePath);
+                    logger.Debug("旧ファイルを削除しました。ファイルパス：{0}", savePath);
+                }
+
+                // 音量
+                if (float.TryParse(this.tbVolume.Text, out tmpFloat))
+                    voiceParameter.Volume = tmpFloat;
+                else
+                    voiceParameter.Volume = 1.0f;
+
+                // 話速
+                if (float.TryParse(this.tbSpeed.Text, out tmpFloat))
+                    voiceParameter.Speed = tmpFloat;
+                else
+                    voiceParameter.Speed = 1.0f;
+
+                // 高さ
+                if (float.TryParse(this.tbPitch.Text, out tmpFloat))
+                    voiceParameter.Tone = tmpFloat;
+                else
+                    voiceParameter.Tone = 1.0f;
+
+                // 抑揚
+                if (float.TryParse(this.tbIntonation.Text, out tmpFloat))
+                    voiceParameter.Intonation = tmpFloat;
+                else
+                    voiceParameter.Intonation = 1.0f;
+
+                // テキスト
+                voiceParameter.Texts = new List<string>();
+                if (string.IsNullOrEmpty(this.tbText.Text))
+                    throw new Exception("読み上げるテキストを入力してください。");
+                voiceParameter.Texts.Add(this.tbText.Text);
+
+                if (!uint.TryParse(this.tbSpeakerId.Text, out tmpUint))
+                    throw new Exception("SpeakerIDは正の整数で入力してください。");
+
+                using (var obgVoiceroid = new Voiceroid((int)tmpUint))
+                {
+                    (int returnVal, int sampleRate, double[] wave) = await obgVoiceroid.SaveVoiceroid(savePath, voiceParameter, 50);
+                    if (returnVal == 0)
+                    {
+                        string msgString = "VOICEROIDで音声を生成しました。";
+                        MessageBox.Show(msgString + "\r\n保存先：" + savePath, "Info", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        logger.Info(msgString);
+                    }
+                    else
+                    {
+                        string msgString = "VOICEROIDでの音声生成に失敗しました。";
+                        MessageBox.Show(msgString, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        logger.Error(msgString);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                logger.Error(ex, "btText2Speech_Clickでエラーが発生しました。メッセージ：{0}", ex.Message);
+            }
+
+            logger.Debug("==============================   End    ==============================");
         }
         #endregion
 
@@ -138,7 +247,7 @@ namespace TestFoem
             if (!this.nowProc)
             {
                 this.nowProc = true;
-                this.tbVolume.Text = (this.trcbrVolume.Value / 10.0).ToString("0.0");
+                this.tbVolume.Text = (this.trcbrVolume.Value / 100.0).ToString("0.00");
                 this.nowProc = false;
             }
         }
@@ -154,7 +263,7 @@ namespace TestFoem
             {
                 string tmpVal = this.tbVolume.Text;
                 this.nowProc = true;
-                this.trcbrVolume.Value = (int)ValidateTextBoxValue(this.trcbrVolume, ref tmpVal, 10, 1);
+                this.trcbrVolume.Value = (int)ValidateTextBoxValue(this.trcbrVolume, ref tmpVal, 100, 1);
                 this.tbVolume.Text = tmpVal;
                 this.nowProc = false;
             }
@@ -172,7 +281,7 @@ namespace TestFoem
             if (!this.nowProc)
             {
                 this.nowProc = true;
-                this.tbSpeed.Text = (this.trcbrSpeed.Value / 10.0).ToString("0.0");
+                this.tbSpeed.Text = (this.trcbrSpeed.Value / 100.0).ToString("0.00");
                 this.nowProc = false;
             }
         }
@@ -188,7 +297,7 @@ namespace TestFoem
             {
                 string tmpVal = this.tbSpeed.Text;
                 this.nowProc = true;
-                this.trcbrSpeed.Value = (int)ValidateTextBoxValue(this.trcbrSpeed, ref tmpVal, 10, 1);
+                this.trcbrSpeed.Value = (int)ValidateTextBoxValue(this.trcbrSpeed, ref tmpVal, 100, 1);
                 this.tbSpeed.Text = tmpVal;
                 this.nowProc = false;
             }
@@ -206,7 +315,7 @@ namespace TestFoem
             if (!this.nowProc)
             {
                 this.nowProc = true;
-                this.tbPitch.Text = (this.trcbrPitch.Value / 1000.0).ToString("0.0");
+                this.tbPitch.Text = (this.trcbrPitch.Value / 100.0).ToString("0.00");
                 this.nowProc = false;
             }
         }
@@ -222,7 +331,7 @@ namespace TestFoem
             {
                 string tmpVal = this.tbPitch.Text;
                 this.nowProc = true;
-                this.trcbrPitch.Value = (int)ValidateTextBoxValue(this.trcbrPitch, ref tmpVal, 1000, 0);
+                this.trcbrPitch.Value = (int)ValidateTextBoxValue(this.trcbrPitch, ref tmpVal, 100, 0);
                 this.tbPitch.Text = tmpVal;
                 this.nowProc = false;
             }
@@ -240,7 +349,7 @@ namespace TestFoem
             if (!this.nowProc)
             {
                 this.nowProc = true;
-                this.tbIntonation.Text = (this.trcbrIntonation.Value / 10.0).ToString("0.0");
+                this.tbIntonation.Text = (this.trcbrIntonation.Value / 100.0).ToString("0.00");
                 this.nowProc = false;
             }
         }
@@ -256,7 +365,7 @@ namespace TestFoem
             {
                 string tmpVal = this.tbIntonation.Text;
                 this.nowProc = true;
-                this.trcbrIntonation.Value = (int)ValidateTextBoxValue(this.trcbrIntonation, ref tmpVal, 10, 1);
+                this.trcbrIntonation.Value = (int)ValidateTextBoxValue(this.trcbrIntonation, ref tmpVal, 100, 1);
                 this.tbIntonation.Text = tmpVal;
                 this.nowProc = false;
             }

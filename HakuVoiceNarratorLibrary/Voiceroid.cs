@@ -3,16 +3,19 @@ using Codeer.Friendly.Windows;
 using Codeer.Friendly.Windows.Grasp;
 using Codeer.Friendly.Windows.NativeStandardControls;
 using HakuVoiceNarratorLibrary.Common;
+using Microsoft.AspNetCore.Html;
 using NAudio.Wave;
 using NLog;
 using Ong.Friendly.FormsStandardControls;
 using System;
 using System.Collections.Generic;
 using System.Data.Common;
+using System.Data.SqlTypes;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection.Metadata;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace HakuVoiceNarratorLibrary
@@ -116,43 +119,35 @@ namespace HakuVoiceNarratorLibrary
                     {
                         logger.Debug("VOICEROIDへパラメーターを設定しました。");
                         // テキスト設定
+                        string setString = "";
                         foreach (var tmpString in parameter.Texts.Select((Value, Index) => (Value, Index)))
                         {
-                            if (SendText(parameter, (uint)tmpString.Index) != 0)
+                            if (!string.IsNullOrEmpty(setString))
+                            {
+                                setString += "\r\n";
+                            }
+                            setString += tmpString.Value;
+                        }
+                        if (SendText(setString) == 0)
+                        {
+                            logger.Debug("VOICEROIDへテキストを設定しました。");
+                            // 音声再生
+                            if (SendPlay() == 0)
+                            {
+                                returnVal = 0;
+                                logger.Debug("VOICEROIDで音声再生しました。");
+                            }
+                            else
                             {
                                 returnVal = -1;
-                                logger.Error("VOICEROIDへテキストの反映に失敗しました。行数:{0},文字列:{1}", tmpString.Index, tmpString.Value);
-                                break;
+                                logger.Error("VOICEROIDで音声再生に失敗しました。");
                             }
-                        }
-                        logger.Debug("VOICEROIDへテキストを設定しました。");
-                        // 音声再生
-                        if (this._app is not null)
-                        {
-                            // 操作対象ウィンドウ
-                            var targetWindows = WindowControl.FromZTop(this._app);
-                            logger.Debug("操作対象Windowを取得しました。ハンドルID:{0}", targetWindows.Handle);
-
-                            // 再生ボタン
-                            FormsButton btPlay = new FormsButton(targetWindows.IdentifyFromZIndex(
-                                (int)this._zindexInfo.PlayButton[0],
-                                (int)this._zindexInfo.PlayButton[1],
-                                (int)this._zindexInfo.PlayButton[2],
-                                (int)this._zindexInfo.PlayButton[3],
-                                (int)this._zindexInfo.PlayButton[4],
-                                (int)this._zindexInfo.PlayButton[5],
-                                (int)this._zindexInfo.PlayButton[6],
-                                (int)this._zindexInfo.PlayButton[7]));
-                            btPlay.EmulateClick();
-                            logger.Debug("再生ボタンをクリックしました。ダイアログID:{0}", btPlay.DialogId);
                         }
                         else
                         {
                             returnVal = -1;
-                            logger.Error("TakeVoiceroidでエラーが発生しました。メッセージ：VOICEROIDが起動していません。");
+                            logger.Error("VOICEROIDへテキストの反映に失敗しました。文字列:{0}", setString);
                         }
-
-                        returnVal = 0;
                     }
                     else
                     {
@@ -177,16 +172,22 @@ namespace HakuVoiceNarratorLibrary
                 try
                 {
                     bool isError = false;
+                    string setString = "";
 
-                    logger.Debug("COICEROIDの設定を復元します。");
+                    logger.Debug("VOICEROIDの設定を復元します。");
 
                     if (this.SendParameter(this._backupVoiceParameter) != 0)
                         isError = true;
                     foreach (var tmpString in this._backupVoiceParameter.Texts.Select((Value, Index) => (Value, Index)))
                     {
-                        if (SendText(this._backupVoiceParameter, (uint)tmpString.Index) != 0)
-                            isError = true;
+                        if (!string.IsNullOrEmpty(setString))
+                        {
+                            setString += "\r\n";
+                        }
+                        setString += tmpString.Value;
                     }
+                    if (SendText(setString) != 0)
+                        isError = true;
 
                     if (isError)
                     {
@@ -194,7 +195,7 @@ namespace HakuVoiceNarratorLibrary
                     }
                     else
                     {
-                        logger.Debug("COICEROIDの設定を復元しました。");
+                        logger.Debug("VOICEROIDの設定を復元しました。");
                     }
 
                 }
@@ -235,59 +236,23 @@ namespace HakuVoiceNarratorLibrary
                     {
                         logger.Debug("VOICEROIDへパラメーターを設定しました。");
                         // テキスト設定
+                        string setString = "";
                         foreach (var tmpString in parameter.Texts.Select((Value, Index) => (Value, Index)))
                         {
-                            if (SendText(parameter, (uint)tmpString.Index) != 0)
-                            {
-                                returnVal = -1;
-                                sampleRate = -1;
-                                waveArray = new double[0];
-                                logger.Error("VOICEROIDへテキストの反映に失敗しました。行数:{0},文字列:{1}", tmpString.Index, tmpString.Value);
-                                break;
-                            }
+                            if (!string.IsNullOrEmpty(setString)) setString += "\r\n";
+                            setString += tmpString.Value;
                         }
-                        logger.Debug("VOICEROIDへテキストを設定しました。");
-                        // 音声保存
-                        if (this._app is not null)
+                        if (SendText(setString) == 0)
                         {
-                            // 操作対象ウィンドウ
-                            var targetWindows = WindowControl.FromZTop(this._app);
-                            logger.Debug("操作対象Windowを取得しました。ハンドルID:{0}", targetWindows.Handle);
-
-                            // 音声保存ボタン
-                            FormsButton btSave = new FormsButton(targetWindows.IdentifyFromZIndex(
-                                (int)this._zindexInfo.SaveButton[0],
-                                (int)this._zindexInfo.SaveButton[1],
-                                (int)this._zindexInfo.SaveButton[2],
-                                (int)this._zindexInfo.SaveButton[3],
-                                (int)this._zindexInfo.SaveButton[4],
-                                (int)this._zindexInfo.SaveButton[5],
-                                (int)this._zindexInfo.SaveButton[6],
-                                (int)this._zindexInfo.SaveButton[7]));
-                            btSave.EmulateClick();
-                            logger.Debug("音声保存ボタンをクリックしました。ダイアログID:{0}", btSave.DialogId);
-
-                            // 出力ファイルの存在確認
-                            if (File.Exists(wavePath))
+                            logger.Debug("VOICEROIDへテキストを設定しました。");
+                            // 音声保存
+                            (returnVal, waveArray, sampleRate) = SendSave(wavePath, spanMS);
+                            if (returnVal == 0)
                             {
-                                using (var fileReader = new WaveFileReader(wavePath))
-                                {
-                                    sampleRate = fileReader.WaveFormat.SampleRate;
-                                    waveArrayList = new List<double>(spanMS * sampleRate / 1000);
-                                    while (fileReader.Position < fileReader.Length)
-                                    {
-                                        var samples = fileReader.ReadNextSampleFrame();
-                                        waveArrayList.Add(samples.First());
-                                    }
-                                }
-                                waveArray = waveArrayList.ToArray();
-                                returnVal = 0;
+                                logger.Info("VOICEROIDで音声生成しました。保存先：{0}", wavePath);
                             }
                             else
                             {
-                                returnVal = -1;
-                                sampleRate = -1;
-                                waveArray = new double[0];
                                 logger.Error("SaveVoiceroidでVOICEROIDにて音声生成に失敗しました。");
                             }
                         }
@@ -296,11 +261,8 @@ namespace HakuVoiceNarratorLibrary
                             returnVal = -1;
                             sampleRate = -1;
                             waveArray = new double[0];
-                            logger.Error("SaveVoiceroidでエラーが発生しました。メッセージ：VOICEROIDが起動していません。");
+                            logger.Error("VOICEROIDへテキストの反映に失敗しました。文字列:{0}", setString);
                         }
-
-
-                        returnVal = 0;
                     }
                     else
                     {
@@ -325,6 +287,43 @@ namespace HakuVoiceNarratorLibrary
                 waveArray = new double[0];
                 logger.Error(ex, "SaveVoiceroidでエラーが発生しました。メッセージ：{0}", ex.Message);
             }
+            finally
+            {
+                try
+                {
+                    bool isError = false;
+                    string setString = "";
+
+                    logger.Debug("VOICEROIDの設定を復元します。");
+
+                    if (this.SendParameter(this._backupVoiceParameter) != 0)
+                        isError = true;
+                    foreach (var tmpString in this._backupVoiceParameter.Texts.Select((Value, Index) => (Value, Index)))
+                    {
+                        if (!string.IsNullOrEmpty(setString))
+                        {
+                            setString += "\r\n";
+                        }
+                        setString += tmpString.Value;
+                    }
+                    if (SendText(setString) != 0)
+                        isError = true;
+
+                    if (isError)
+                    {
+                        throw new Exception("ToDo");
+                    }
+                    else
+                    {
+                        logger.Debug("VOICEROIDの設定を復元しました。");
+                    }
+
+                }
+                catch (Exception ex)
+                {
+                    logger.Warn(ex, "VOICEROID設定の復元に失敗しました。メッセージ：{0}", ex.Message);
+                }
+            }
 
             logger.Debug("==============================   End    ==============================");
             return (returnVal, sampleRate, waveArray);
@@ -344,6 +343,7 @@ namespace HakuVoiceNarratorLibrary
             {
                 if (this._app is not null)
                 {
+                    int tmpInt = 0;
                     // 操作対象ウィンドウ
                     var targetWindows = WindowControl.FromZTop(this._app);
                     logger.Debug("操作対象Windowを取得しました。ハンドルID:{0}", targetWindows.Handle);
@@ -355,6 +355,7 @@ namespace HakuVoiceNarratorLibrary
                        (int)this._zindexInfo.VoiceParameterTab[2],
                        (int)this._zindexInfo.VoiceParameterTab[3],
                        (int)this._zindexInfo.VoiceParameterTab[4]));
+                    tmpInt = targetTab.SelectedIndex;
                     targetTab.EmulateTabSelect(2);
                     logger.Debug("音声効果タブに切り替えました。ダイアログID:{0}", targetTab.DialogId);
 
@@ -409,6 +410,13 @@ namespace HakuVoiceNarratorLibrary
                         (int)this._zindexInfo.Intonation[7]));
                     tbIntonation.EmulateChangeText(parameter.Intonation.ToString("0.00"));
                     logger.Debug("抑揚をセットしました。ダイアログID:{0},セット値:{1}", tbIntonation.DialogId, tbIntonation.GetWindowText());
+
+                    Thread.Sleep(10);
+
+                    targetTab.EmulateTabSelect(tmpInt);
+                    logger.Debug("タブを切り替えました。ダイアログID:{0},タブインデックス:{1},タブ名:{2}", targetTab.DialogId, tmpInt, targetTab.GetWindowText());
+
+                    Thread.Sleep(10);
                 }
                 else
                 {
@@ -431,10 +439,9 @@ namespace HakuVoiceNarratorLibrary
         /// <summary>
         /// VOICEROIDへ読み上げる文字列をセットする処理
         /// </summary>
-        /// <param name="parameter">ボイスパラメーター</param>
-        /// <param name="row">読み上げ対象行番</param>
+        /// <param name="text">セットする文字列</param>
         /// <returns></returns>
-        private int SendText(Models.VoiceParameter parameter, uint row)
+        private int SendText(string text)
         {
             int returnVal = -1;
             logger.Debug("==============================  Start   ==============================");
@@ -448,7 +455,7 @@ namespace HakuVoiceNarratorLibrary
                     logger.Debug("操作対象Windowを取得しました。ハンドルID:{0}", targetWindows.Handle);
 
                     // テキストボックス
-                    FormsRichTextBox tbText = new FormsRichTextBox(targetWindows.IdentifyFromZIndex(
+                    FormsRichTextBox tbTextA = new FormsRichTextBox(targetWindows.IdentifyFromZIndex(
                         (int)this._zindexInfo.TextBot[0],
                         (int)this._zindexInfo.TextBot[1],
                         (int)this._zindexInfo.TextBot[2],
@@ -457,8 +464,32 @@ namespace HakuVoiceNarratorLibrary
                         (int)this._zindexInfo.TextBot[5],
                         (int)this._zindexInfo.TextBot[6],
                         (int)this._zindexInfo.TextBot[7]));
-                    tbText.EmulateChangeText(parameter.Texts[(int)row]);
-                    logger.Debug("テキストをセットしました。ダイアログID:{0},セット値:{1}", tbText.DialogId, tbText.GetWindowText());
+                    logger.Debug("コントロールを取得しました。ダイアログID:{0},値:{1}", tbTextA.DialogId, tbTextA.GetWindowText());
+                    tbTextA.EmulateChangeText(text);
+                    logger.Debug("テキストをセットしました。ダイアログID:{0},値:{1}", tbTextA.DialogId, tbTextA.GetWindowText());
+
+                    // 再生済みの場合、リッチテキストぼっくが増えるためこちらもセット
+                    try
+                    {
+                        FormsRichTextBox tbTextB = new FormsRichTextBox(targetWindows.IdentifyFromZIndex(
+                            (int)this._zindexInfo.TextBot[0],
+                            (int)this._zindexInfo.TextBot[1],
+                            (int)this._zindexInfo.TextBot[2],
+                            (int)this._zindexInfo.TextBot[3],
+                            (int)this._zindexInfo.TextBot[4],
+                            (int)this._zindexInfo.TextBot[5],
+                            (int)this._zindexInfo.TextBot[6],
+                            (int)this._zindexInfo.TextBot[7] + 1));
+                        logger.Debug("コントロールを取得しました。ダイアログID:{0},値:{1}", tbTextB.DialogId, tbTextB.GetWindowText());
+                        tbTextB.EmulateChangeText(text);
+                        logger.Debug("テキストをセットしました。ダイアログID:{0},値:{1}", tbTextB.DialogId, tbTextB.GetWindowText());
+                    }
+                    catch (Exception ex)
+                    {
+                        logger.Debug(ex, "再生済み時に生成されるリッチテキストエディタの取得に失敗しました。エラー:{0}", ex.Message);
+                    }
+
+                    Thread.Sleep(10);
                 }
                 else
                 {
@@ -479,6 +510,203 @@ namespace HakuVoiceNarratorLibrary
         }
 
         /// <summary>
+        /// VOICEROID再生ボタン押下メッセージ送信
+        /// </summary>
+        /// <returns></returns>
+        private int SendPlay()
+        {
+            int returnVal = -1;
+            logger.Debug("==============================  Start   ==============================");
+
+            try
+            {
+                if (this._app is not null)
+                {
+                    // 操作対象ウィンドウ
+                    var targetWindows = WindowControl.FromZTop(this._app);
+                    logger.Debug("操作対象Windowを取得しました。ハンドルID:{0}", targetWindows.Handle);
+
+                    // 再生ボタン
+                    FormsButton btPlay = new FormsButton(targetWindows.IdentifyFromZIndex(
+                        (int)this._zindexInfo.PlayButton[0],
+                        (int)this._zindexInfo.PlayButton[1],
+                        (int)this._zindexInfo.PlayButton[2],
+                        (int)this._zindexInfo.PlayButton[3],
+                        (int)this._zindexInfo.PlayButton[4],
+                        (int)this._zindexInfo.PlayButton[5],
+                        (int)this._zindexInfo.PlayButton[6],
+                        (int)this._zindexInfo.PlayButton[7]));
+
+                    btPlay.EmulateClick();
+                    logger.Debug("再生ボタンをクリックしました。ダイアログID:{0}", btPlay.DialogId);
+
+                    // 音声保存ボタン ※音声再生が完了するまで無効化されるので、再生完了を音声保存ボタンで判断
+                    FormsButton btSave = new FormsButton(targetWindows.IdentifyFromZIndex(
+                        (int)this._zindexInfo.SaveButton[0],
+                        (int)this._zindexInfo.SaveButton[1],
+                        (int)this._zindexInfo.SaveButton[2],
+                        (int)this._zindexInfo.SaveButton[3],
+                        (int)this._zindexInfo.SaveButton[4],
+                        (int)this._zindexInfo.SaveButton[5],
+                        (int)this._zindexInfo.SaveButton[6],
+                        (int)this._zindexInfo.SaveButton[7]));
+
+                    // 再生中待機処理
+                    if (!btSave.Enabled)
+                    {
+                        while (!btSave.Enabled)
+                        {
+                            Thread.Sleep(100);
+                            System.Windows.Forms.Application.DoEvents();
+                        }
+                    }
+
+                    returnVal = 0;
+                }
+                else
+                {
+                    returnVal = -1;
+                    logger.Error("SendPlayでエラーが発生しました。メッセージ：VOICEROIDが起動していません。");
+                }
+
+            }
+            catch (Exception ex)
+            {
+                returnVal = -1;
+                logger.Error(ex, "SendPlayでエラーが発生しました。メッセージ：{0}", ex.Message);
+            }
+
+            logger.Debug("==============================   End    ==============================");
+            return returnVal;
+        }
+
+        /// <summary>
+        /// VOICEROID音声保存ボタン押下メッセージ送信
+        /// </summary>
+        /// <param name="wavePath"></param>
+        /// <param name="spanMS"></param>
+        /// <returns></returns>
+        private (int, double[], int) SendSave(string wavePath, int spanMS)
+        {
+            List<double> waveArrayList;
+            int sampleRate, returnVal = -1;
+            double[] waveArray;
+
+            logger.Debug("==============================  Start   ==============================");
+
+            try
+            {
+                if (this._app is not null)
+                {
+                    // 操作対象ウィンドウ
+                    var targetWindows = WindowControl.FromZTop(this._app);
+                    logger.Debug("操作対象Windowを取得しました。ハンドルID:{0}", targetWindows.Handle);
+
+                    // 音声保存ボタン
+                    FormsButton btSave = new FormsButton(targetWindows.IdentifyFromZIndex(
+                        (int)this._zindexInfo.SaveButton[0],
+                        (int)this._zindexInfo.SaveButton[1],
+                        (int)this._zindexInfo.SaveButton[2],
+                        (int)this._zindexInfo.SaveButton[3],
+                        (int)this._zindexInfo.SaveButton[4],
+                        (int)this._zindexInfo.SaveButton[5],
+                        (int)this._zindexInfo.SaveButton[6],
+                        (int)this._zindexInfo.SaveButton[7]));
+                    var async = new Async();
+                    btSave.EmulateClick(async);
+                    logger.Debug("音声保存ボタンをクリックしました。ダイアログID:{0}", btSave.DialogId);
+
+                    // ファイル名を付けて保存ダイアログ制御
+                    // 操作対象ダイアログ
+                    var targetDialogs = targetWindows.WaitForNextModal();
+                    logger.Debug("操作対象Dialogを取得しました。WindowClassName:{0},WindowText:{1}", targetDialogs.WindowClassName, targetDialogs.GetWindowText());
+
+                    if (targetDialogs.WindowClassName == "#32770" && targetDialogs.GetWindowText().IndexOf("音声ファイルの保存") >= 0)
+                    {
+                        logger.Debug("音声ファイルの保存ダイアログを取得しました。ハンドルID:{0}", targetDialogs.Handle);
+
+                        // ファイルパステキストボックス
+                        NativeEdit tbSaveFilePath = new NativeEdit(targetDialogs.IdentifyFromZIndex(11, 0, 4, 0, 0));
+                        tbSaveFilePath.EmulateChangeText(wavePath);
+                        logger.Debug("保存先パスを設定しました。ダイアログID:{0}", tbSaveFilePath.DialogId);
+
+                        // 保存ボタン
+                        NativeButton btFileSave = new NativeButton(targetDialogs.IdentifyFromZIndex(9));
+                        btFileSave.SetFocus();
+                        btFileSave.EmulateClick();
+
+                        Thread.Sleep(100);
+                        System.Windows.Forms.Application.DoEvents();
+
+                        async.WaitForCompletion();
+
+                        // 生成中待機処理
+                        if (!btSave.Enabled)
+                        {
+                            while (!btSave.Enabled)
+                            {
+                                Thread.Sleep(100);
+                                System.Windows.Forms.Application.DoEvents();
+                            }
+                        }
+
+                        // 出力ファイルの存在確認
+                        if (File.Exists(wavePath))
+                        {
+                            using (var fileReader = new WaveFileReader(wavePath))
+                            {
+                                sampleRate = fileReader.WaveFormat.SampleRate;
+                                waveArrayList = new List<double>(spanMS * sampleRate / 1000);
+                                while (fileReader.Position < fileReader.Length)
+                                {
+                                    var samples = fileReader.ReadNextSampleFrame();
+                                    waveArrayList.Add(samples.First());
+                                }
+                            }
+                            waveArray = waveArrayList.ToArray();
+                            returnVal = 0;
+                        }
+                        else
+                        {
+                            returnVal = -1;
+                            sampleRate = -1;
+                            waveArray = new double[0];
+                            logger.Error("SendSaveでVOICEROIDにて音声生成に失敗しました。");
+                        }
+
+                    }
+                    else
+                    {
+                        returnVal = -1;
+                        sampleRate = -1;
+                        waveArray = new double[0];
+                        logger.Error("ダイアログの操作に失敗しました。エラー:ダイアログが存在しません。");
+                    }
+                }
+                else
+                {
+                    returnVal = -1;
+                    sampleRate = -1;
+                    waveArray = new double[0];
+                    logger.Error("SendSaveでエラーが発生しました。メッセージ：VOICEROIDが起動していません。");
+                }
+
+                returnVal = 0;
+            }
+            catch (Exception ex)
+            {
+
+                returnVal = -1;
+                sampleRate = -1;
+                waveArray = new double[0];
+                logger.Error(ex, "SendSaveでエラーが発生しました。メッセージ：{0}", ex.Message);
+            }
+
+            logger.Debug("==============================   End    ==============================");
+            return (returnVal, waveArray, sampleRate);
+        }
+
+        /// <summary>
         /// VOICEROIDのパラメーターを取得する処理
         /// </summary>
         /// <returns></returns>
@@ -491,6 +719,7 @@ namespace HakuVoiceNarratorLibrary
             {
                 if (this._app is not null)
                 {
+                    int tmpInt = 0;
                     float tmpFloatVal = 0.0f;
                     string tmpString = "";
                     // 操作対象ウィンドウ
@@ -518,6 +747,7 @@ namespace HakuVoiceNarratorLibrary
                        (int)this._zindexInfo.VoiceParameterTab[2],
                        (int)this._zindexInfo.VoiceParameterTab[3],
                        (int)this._zindexInfo.VoiceParameterTab[4]));
+                    tmpInt = targetTab.SelectedIndex;
                     targetTab.EmulateTabSelect(2);
                     logger.Debug("音声効果タブに切り替えました。ダイアログID:{0}", targetTab.DialogId);
 
@@ -604,6 +834,13 @@ namespace HakuVoiceNarratorLibrary
                         logger.Warn("抑揚の値が数値ではありません。初期値(1.0)を使用します。");
                     }
                     logger.Debug("抑揚を読み取りしました。ダイアログID:{0},読み取り値:{1}", tbIntonation.DialogId, this._backupVoiceParameter.Intonation);
+
+                    Thread.Sleep(10);
+
+                    targetTab.EmulateTabSelect(tmpInt);
+                    logger.Debug("タブを切り替えました。ダイアログID:{0},タブインデックス:{1},タブ名:{2}", targetTab.DialogId, tmpInt, targetTab.GetWindowText());
+
+                    Thread.Sleep(10);
                 }
                 else
                 {
