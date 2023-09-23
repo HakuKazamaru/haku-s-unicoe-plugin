@@ -1,0 +1,38 @@
+﻿{
+  "Bools": [],
+  "Ints": [],
+  "Doubles": [],
+  "Strings": [
+    {
+      "Key": "voiceName",
+      "Name": "話者設定",
+      "Description": "読み上げを行うソフト名（キャラクター）を指定してください。インストールされていないキャラクターは使用できません。",
+      "Value": "VOICEROID+ 結月ゆかり EX",
+      "DefaultValue": "",
+      "Type": "combobox",
+      "ComboItems": [
+        "VOICEROID+ 月読ショウタ EX",
+        "VOICEROID+ 月読アイ EX",
+        "VOICEROID+ 琴葉 茜・葵 EX",
+        "VOICEROID+ 吉田くん EX",
+        "VOICEROID+ 民安ともえ EX",
+        "VOICEROID+ 東北ずん子 EX",
+        "VOICEROID+ 結月ゆかり EX",
+        "VOICEROID+ 水奈瀬コウ EX",
+        "VOICEROID+ 京町セイカ EX",
+        "VOICEROID+ 東北きりたん EX",
+        "ギャラ子Talk",
+        "音街ウナTalk Ex",
+        "かんたん！ AITalk 3|あんず",
+        "かんたん！ AITalk 3|かほ",
+        "かんたん！ AITalk 3|ななこ",
+        "かんたん！ AITalk 3|のぞみ",
+        "かんたん！ AITalk 3|せいじ",
+        "かんたん！ AITalk 3 関西風|みやび",
+        "かんたん！ AITalk 3 関西風|やまと"
+      ],
+      "Order": 0,
+      "Hide": false
+    }
+  ]
+}

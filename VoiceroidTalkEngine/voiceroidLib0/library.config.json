@@ -1,8 +1,8 @@
 {
-  "Key": "VoiceroidLibrary",
-  "Name": "VoiceroidLibrary",
-  "Description": "VOICEROID Ex系ライブラリ",
-  "AssemblyName": "VoiceroidLibrary.dll",
+  "Key": "voiceroidLib0",
+  "Name": "ギャラ子",
+  "Description": "VOICEROID Ex系ライブラリ(ギャラ子Talk)",
+  "AssemblyName": "../VoiceroidTalkEngine.dll",
   "OS": "Windows",
   "Language": "Japanese",
   "LibraryFormat": [
@@ -21,7 +21,7 @@
     "SmallStep": 0.01,
     "StringFormat": "0.00",
     "Type": "Section",
-    "Hide": true
+    "Hide": false
   },
   "SpeedSetting": {
     "Name": "話速",
@@ -36,7 +36,7 @@
     "SmallStep": 0.01,
     "StringFormat": "0.00",
     "Type": "Section",
-    "Hide": true
+    "Hide": false
   },
   "PitchSetting": {
     "Name": "高さ",
@@ -51,7 +51,7 @@
     "SmallStep": 0.01,
     "StringFormat": "0.00",
     "Type": "Section",
-    "Hide": true
+    "Hide": false
   },
   "EmphasisSetting": {
     "Name": "抑揚",
@@ -66,7 +66,7 @@
     "SmallStep": 0.01,
     "StringFormat": "0.00",
     "Type": "Section",
-    "Hide": true
+    "Hide": false
   },
   "AdditionalSettings": null
 }

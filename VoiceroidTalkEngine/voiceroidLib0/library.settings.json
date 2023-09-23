@@ -1,0 +1,18 @@
+﻿{
+  "Bools": [],
+  "Ints": [],
+  "Doubles": [],
+  "Strings": [
+    {
+      "Key": "voiceName",
+      "Name": "話者設定",
+      "Description": "インストールされていないキャラクターは使用できません。",
+      "Value": "ギャラ子Talk",
+      "DefaultValue": "ギャラ子Talk",
+      "Type": "combobox",
+      "ComboItems": [ "ギャラ子Talk" ],
+      "Order": 0,
+      "Hide": false
+    }
+  ]
+}

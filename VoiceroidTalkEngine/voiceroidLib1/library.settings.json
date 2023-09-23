@@ -1,0 +1,18 @@
+﻿{
+  "Bools": [],
+  "Ints": [],
+  "Doubles": [],
+  "Strings": [
+    {
+      "Key": "voiceName",
+      "Name": "話者設定",
+      "Description": "インストールされていないキャラクターは使用できません。",
+      "Value": "音街ウナTalk Ex",
+      "DefaultValue": "音街ウナTalk Ex",
+      "Type": "combobox",
+      "ComboItems": [ "音街ウナTalk Ex" ],
+      "Order": 0,
+      "Hide": false
+    }
+  ]
+}

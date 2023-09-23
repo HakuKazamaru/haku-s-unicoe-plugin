@@ -1,4 +1,7 @@
-﻿using NLog;
+﻿using Controllers = HakuVoiceNarratorLibrary.Controllers;
+using Models = HakuVoiceNarratorLibrary.Models;
+using Microsoft.AspNetCore.Mvc;
+using NLog;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.Eventing.Reader;
@@ -61,6 +64,10 @@ namespace VoiceroidCommandRunner
                                     case "break":
                                     case "c":
                                     case "character":
+                                    case "n":
+                                    case "name":
+                                    case "l":
+                                    case "list":
                                         {
                                             // 制御コマンドは何もしない
                                             break;
@@ -82,6 +89,7 @@ namespace VoiceroidCommandRunner
                         // ヘルプコマンドを使用していない場合、各パラメータの確認
                         if (returnVal != 0b10000000)
                         {
+                            uint parameterOk = 0b00000000;
                             foreach (var arg in args.Select((Value, Index) => (Value, Index)))
                             {
                                 // コマンド引数のみ対応([/]または[-]から始まる場合)
@@ -95,48 +103,68 @@ namespace VoiceroidCommandRunner
                                         case "out":
                                             {
                                                 if (!CheckOutputParameter(args, arg.Index)) { returnVal += 0b00000001; }
+                                                else { parameterOk += 0b00000001; }
                                                 break;
                                             }
                                         case "t":
                                         case "text":
                                             {
                                                 if (!CheckTextParameter(args, arg.Index)) { returnVal += 0b00000010; }
+                                                else { parameterOk += 0b00000010; }
                                                 break;
                                             }
                                         case "v":
                                         case "volume":
                                             {
                                                 if (!CheckVolumeParameter(args, arg.Index)) { returnVal += 0b00000100; }
+                                                else { parameterOk += 0b00000100; }
                                                 break;
                                             }
                                         case "s":
                                         case "speed":
                                             {
                                                 if (!CheckSpeedParameter(args, arg.Index)) { returnVal += 0b00001000; }
+                                                else { parameterOk += 0b00001000; }
                                                 break;
                                             }
                                         case "p":
                                         case "pitch":
                                             {
                                                 if (!CheckPitchParameter(args, arg.Index)) { returnVal += 0b00010000; }
+                                                else { parameterOk += 0b00010000; }
                                                 break;
                                             }
                                         case "i":
                                         case "intonation":
                                             {
                                                 if (!CheckIntonationParameter(args, arg.Index)) { returnVal += 0b00100000; }
+                                                else { parameterOk += 0b00100000; }
                                                 break;
                                             }
                                         case "b":
                                         case "break":
                                             {
                                                 if (!CheckBreakParameter(args, arg.Index)) { returnVal += 0b01000000; }
+                                                else { parameterOk += 0b01000000; }
                                                 break;
                                             }
                                         case "c":
                                         case "character":
                                             {
                                                 if (!CheckCharacterParameter(args, arg.Index)) { returnVal += 0b01000000; }
+                                                else { parameterOk += 0b10000000; }
+                                                break;
+                                            }
+                                        case "n":
+                                        case "name":
+                                            {
+                                                if (!CheckNameParameter(args, arg.Index)) { returnVal += 0b01000000; }
+                                                else { parameterOk += 0b10000000; }
+                                                break;
+                                            }
+                                        case "l":
+                                        case "list":
+                                            {
                                                 break;
                                             }
                                         case "?":
@@ -587,10 +615,10 @@ namespace VoiceroidCommandRunner
                             returnVal = false;
                             logger.Error("ポーズが最大値(500)を超えています。指定値:{0}", tmpInt);
                         }
-                        else if (tmpInt < 50)
+                        else if (tmpInt < 0)
                         {
                             returnVal = false;
-                            logger.Error("ポーズが最小値(50)を下回っています。指定値:{0}", tmpInt);
+                            logger.Error("ポーズが最小値(0)を下回っています。指定値:{0}", tmpInt);
                         }
                         else
                         {
@@ -623,7 +651,7 @@ namespace VoiceroidCommandRunner
         }
 
         /// <summary>
-        /// ポーズ確認処理
+        /// 話者ID確認処理
         /// </summary>
         /// <param name="args"></param>
         /// <param name="index"></param>
@@ -648,24 +676,17 @@ namespace VoiceroidCommandRunner
                     }
                     else
                     {
-                        bool checkFlag = false;
-                        foreach (var voiceroidInfo in Program.voiceroidInfos.Select((Value, Index) => (Value, Index)))
-                        {
-                            if (voiceroidInfo.Value.TalkerId == tmpInt)
-                            {
-                                checkFlag = true;
-                                break;
-                            }
-                        }
-
-                        if (checkFlag)
+                        int checkFlag = Controllers.VoiceroidInfo.SearchByTalkerId(tmpInt, Program.voiceroidInfos);
+                        if (checkFlag == 1)
                         {
                             returnVal = true;
                             Program.voiceParameter.TalkerId = tmpInt;
+                            Program.isTalkerOk = true;
                         }
                         else
                         {
                             returnVal = false;
+                            Program.isTalkerOk = false;
                             logger.Error("指定された話者が存在していません。");
                         }
                     }
@@ -673,10 +694,12 @@ namespace VoiceroidCommandRunner
                 else
                 {
                     returnVal = false;
+                    Program.isTalkerOk = false;
+
                     logger.Error("話者が指定されていません。");
                     messageString += "指定方法：\r\n";
                     messageString += "\r\n";
-                    messageString += "VoiceroidCommandRunner /C 話者\r\n";
+                    messageString += "VoiceroidCommandRunner /C 話者ID\r\n";
                     messageString += "\r\n";
                     messageString += "指定例：\r\n";
                     messageString += "VoiceroidCommandRunner /C 0\r\n";
@@ -686,6 +709,90 @@ namespace VoiceroidCommandRunner
             catch (Exception ex)
             {
                 returnVal = false;
+                Program.isTalkerOk = false;
+                logger.Error(ex, "予期せぬエラーが発生しました。エラーメッセージ：{0}", ex.Message);
+            }
+
+            logger.Debug("==============================   End    ==============================");
+            return returnVal;
+        }
+
+        /// <summary>
+        /// 話者名確認処理
+        /// </summary>
+        /// <param name="args"></param>
+        /// <param name="index"></param>
+        /// <returns></returns>
+        private static bool CheckNameParameter(string[] args, int index)
+        {
+            bool returnVal = false;
+            string messageString = "";
+            logger.Debug("==============================  Start   ==============================");
+
+            try
+            {
+                if (args.Length > index + 1)
+                {
+                    int checkFlag = -1;
+                    string tmpString = args[index + 1];
+                    Models.VoiceroidInfo voiceroidInfo;
+
+                    Program.voiceParameter.IsAiTalk = tmpString.IndexOf("|") >= 0;
+
+                    // かんたん! AITalk話者指定あり時は「|」より前を話者名として使用
+                    tmpString = Program.voiceParameter.IsAiTalk ? tmpString.Split('|')[0] : tmpString;
+                    (checkFlag, voiceroidInfo) = Controllers.VoiceroidInfo.GetVoiceroidInfoByTalkerName(tmpString, Program.voiceroidInfos);
+
+                    if (checkFlag == 1)
+                    {
+                        returnVal = true;
+                        Program.voiceParameter.TalkerId = voiceroidInfo.TalkerId;
+
+                        if (Program.voiceParameter.IsAiTalk)
+                        {
+                            tmpString = args[index + 1].Split('|')[1];
+                            Program.voiceParameter.CharacterNo = Controllers.VoiceroidInfo.GetCharacterNoByCharacterName(tmpString, voiceroidInfo);
+                            if (Program.voiceParameter.CharacterNo < 0)
+                            {
+                                logger.Error("指定されたAI Talkのキャラクターが存在していません。");
+                                Program.isTalkerOk = false;
+                            }
+                            else
+                            {
+                                Program.isTalkerOk = true;
+                            }
+                        }
+                        else
+                        {
+                            Program.isTalkerOk = true;
+                        }
+                    }
+                    else
+                    {
+                        returnVal = false;
+                        Program.isTalkerOk = false;
+                        logger.Error("指定された話者が存在していません。");
+                    }
+                }
+                else
+                {
+                    returnVal = false;
+                    Program.isTalkerOk = false;
+
+                    logger.Error("話者が指定されていません。");
+                    messageString += "指定方法：\r\n";
+                    messageString += "\r\n";
+                    messageString += "VoiceroidCommandRunner /N 話者名\r\n";
+                    messageString += "\r\n";
+                    messageString += "指定例：\r\n";
+                    messageString += "VoiceroidCommandRunner /N \"VOICEROID+ 結月ゆかり EX\"\r\n";
+                    logger.Info(messageString);
+                }
+            }
+            catch (Exception ex)
+            {
+                returnVal = false;
+                Program.isTalkerOk = false;
                 logger.Error(ex, "予期せぬエラーが発生しました。エラーメッセージ：{0}", ex.Message);
             }
 
@@ -706,7 +813,7 @@ namespace VoiceroidCommandRunner
             messageString += "使用方法：\r\n";
             messageString += "\r\n";
             messageString += "VoiceroidCommandRunner /O 保存先 /T 読み上げ文章 /V 音量 /S 話速 /P 高さ\r\n";
-            messageString += "                       /I 抑揚 /B ポーズ /C 話者\r\n";
+            messageString += "                       /I 抑揚 /B ポーズ [/C 話者ID /N 話者名] [/L]\r\n";
             messageString += "\r\n";
             messageString += "  /O 保存先       生成した音声ファイルの保存先を指定します。\r\n";
             messageString += "  /T 読み上げ文章 読み上げる文章をテキストで指定します。\r\n";
@@ -719,7 +826,9 @@ namespace VoiceroidCommandRunner
             messageString += "  /I 抑揚         読み上げ時の抑揚の強さを指定します。\r\n";
             messageString += "                  初期値:1.00 最小値:0.00 最大値:2.00\r\n";
             messageString += "  /B ポーズ       読み上げる文章毎の読み上げ間隔を指定します。\r\n";
-            messageString += "  /C 話者         読み上げるキャラクターIDを指定します。\r\n";
+            messageString += "  /C 話者ID       読み上げるキャラクターIDを指定します。\r\n";
+            messageString += "  /N 話者名       読み上げるキャラクター名を指定します。\r\n";
+            messageString += "  /L              読み上げるキャラクターのIDと名前の一覧を表示します。\r\n";
 
             logger.Info(messageString);
 

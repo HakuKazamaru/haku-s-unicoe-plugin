@@ -55,5 +55,16 @@ namespace HakuVoiceNarratorLibrary.Models
         /// 文末ポーズ(200~10000ms)
         /// </summary>
         public uint TerminatePause { get; set; }
+
+        /// <summary>
+        /// かんたん!AI Talk使用フラグ
+        /// </summary>
+        public bool IsAiTalk { get; set; }
+
+        /// <summary>
+        /// かんたん!AI Talk キャラクターNO
+        /// </summary>
+        public int CharacterNo { get; set; }
+
     }
 }

@@ -2,7 +2,7 @@
   "Key": "VoiceroidLibrary",
   "Name": "VoiceroidLibrary",
   "Description": "VOICEROID Ex系ライブラリ",
-  "AssemblyName": "VoiceroidLibrary.dll",
+  "AssemblyName": "../VoiceroidTalkEngine.dll",
   "OS": "Windows",
   "Language": "Japanese",
   "LibraryFormat": [

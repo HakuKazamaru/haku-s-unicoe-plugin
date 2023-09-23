@@ -45,6 +45,11 @@ namespace VoiceroidCommandRunner
         internal static int spanMS = 50;
 
         /// <summary>
+        /// キャラクター指定済み
+        /// </summary>
+        internal static bool isTalkerOk = false;
+
+        /// <summary>
         /// メインメソッド
         /// </summary>
         /// <returns></returns>
@@ -95,7 +100,7 @@ namespace VoiceroidCommandRunner
                     if (returnVal == 0)
                     {
                         string tmpString = "";
-                        
+
                         tmpString = voiceroidInfos[(int)voiceParameter.TalkerId].TalkerName;
                         logger.Info("話者　　　　：{0}", tmpString);
                         tmpString = "";

@@ -1,12 +1,12 @@
 {
-  "Key": "VoiceroidLibrary",
-  "Name": "VoiceroidLibrary",
-  "Description": "VOICEROID Ex系ライブラリ",
-  "AssemblyName": "VoiceroidLibrary.dll",
+  "Key": "voiceroidLib1",
+  "Name": "音街ウナ",
+  "Description": "VOICEROID Ex系ライブラリ(音街ウナTalk Ex)",
+  "AssemblyName": "../VoiceroidTalkEngine.dll",
   "OS": "Windows",
   "Language": "Japanese",
   "LibraryFormat": [
-    "Format"
+    "VoiceroidLibrary"
   ],
   "VolumeSetting": {
     "Name": "音量",
@@ -20,6 +20,7 @@
     "MaxExtend": 2,
     "SmallStep": 0.01,
     "StringFormat": "0.00",
+    "Type": "Section",
     "Hide": false
   },
   "SpeedSetting": {
@@ -29,11 +30,12 @@
     "Value": 1,
     "DefaultValue": 1,
     "Min": 0.5,
-    "MinExtend": 0.1,
+    "MinExtend": 0.5,
     "Max": 4,
-    "MaxExtend": 5,
+    "MaxExtend": 4,
     "SmallStep": 0.01,
     "StringFormat": "0.00",
+    "Type": "Section",
     "Hide": false
   },
   "PitchSetting": {
@@ -43,11 +45,12 @@
     "Value": 1,
     "DefaultValue": 1,
     "Min": 0.5,
-    "MinExtend": 0.1,
+    "MinExtend": 0.5,
     "Max": 2,
-    "MaxExtend": 5,
+    "MaxExtend": 2,
     "SmallStep": 0.01,
     "StringFormat": "0.00",
+    "Type": "Section",
     "Hide": false
   },
   "EmphasisSetting": {
@@ -59,9 +62,10 @@
     "Min": 0,
     "MinExtend": 0,
     "Max": 2,
-    "MaxExtend": 5,
+    "MaxExtend": 2,
     "SmallStep": 0.01,
     "StringFormat": "0.00",
+    "Type": "Section",
     "Hide": false
   },
   "AdditionalSettings": null

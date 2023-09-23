@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Ong.Friendly.FormsStandardControls.Generator;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -11,6 +12,21 @@ namespace HakuVoiceNarratorLibrary.Models
     /// </summary>
     public class VoiceroidInfo
     {
+        /// <summary>
+        /// かんたん！AI Takeキャラクター情報構造体
+        /// </summary>
+        public struct AiTalkCharacterInfo
+        {
+            /// <summary>
+            /// キャラクター番号
+            /// </summary>
+            public int No { get; set; }
+            /// <summary>
+            /// キャラクター名
+            /// </summary>
+            public string Name { get; set; }
+        }
+
         /// <summary>
         /// 話者ID
         /// </summary>
@@ -31,5 +47,14 @@ namespace HakuVoiceNarratorLibrary.Models
         /// </summary>
         public string InstallPath { get; set; }
 
+        /// <summary>
+        /// かんたん！AI Takeフラグ
+        /// </summary>
+        public bool IsAiTalk { get; set; }
+
+        /// <summary>
+        /// かんたん！AI Take一覧
+        /// </summary>
+        public List<AiTalkCharacterInfo> CharacterList { get; set; }
     }
 }
